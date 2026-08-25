@@ -3,9 +3,10 @@
 set -euo pipefail
 
 PROGRAM_NAME="1pup"
-PROGRAM_VERSION="0.1.0"
+PROGRAM_VERSION="0.1.1"
 REPOSITORY="Aethersailor/1Panel-Auto-Upgrade"
-RAW_URL="https://raw.githubusercontent.com/${REPOSITORY}/main/1pup.sh"
+RAW_URL="${ONEPUP_RAW_URL:-https://raw.githubusercontent.com/${REPOSITORY}/main/1pup.sh}"
+JSDELIVR_URL="${ONEPUP_JSDELIVR_URL:-https://cdn.jsdelivr.net/gh/${REPOSITORY}@main/1pup.sh}"
 
 MANAGER_PATH="/usr/local/bin/1pup"
 LONG_ALIAS="/usr/local/bin/1panel-auto-upgrade"
@@ -306,9 +307,19 @@ manager_source() {
 download_script() {
     local target="$1"
     if command_exists curl; then
-        curl -fsSL "${RAW_URL}" -o "${target}"
+        if curl -fsSL "${RAW_URL}" -o "${target}"; then
+            return 0
+        fi
+        warn "GitHub Raw 下载失败，尝试 jsDelivr。"
+        curl -fsSL "${JSDELIVR_URL}" -o "${target}" \
+            || die "GitHub Raw 和 jsDelivr 均下载失败。"
     elif command_exists wget; then
-        wget -qO "${target}" "${RAW_URL}"
+        if wget -qO "${target}" "${RAW_URL}"; then
+            return 0
+        fi
+        warn "GitHub Raw 下载失败，尝试 jsDelivr。"
+        wget -qO "${target}" "${JSDELIVR_URL}" \
+            || die "GitHub Raw 和 jsDelivr 均下载失败。"
     else
         die "需要 curl 或 wget 才能下载脚本。"
     fi
