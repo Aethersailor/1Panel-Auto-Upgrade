@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-PROGRAM_NAME="1pup"
-PROGRAM_VERSION="0.1.1"
 REPOSITORY="Aethersailor/1Panel-Auto-Upgrade"
 RAW_URL="${ONEPUP_RAW_URL:-https://raw.githubusercontent.com/${REPOSITORY}/main/1pup.sh}"
 JSDELIVR_URL="${ONEPUP_JSDELIVR_URL:-https://cdn.jsdelivr.net/gh/${REPOSITORY}@main/1pup.sh}"
@@ -1024,7 +1022,7 @@ unit_state() {
 status_flow() {
     require_root status
     load_config
-    printf '\n1Panel 自动升级管理器 v%s\n' "${PROGRAM_VERSION}"
+    printf '\n1Panel 自动升级管理器\n'
     printf '  模式：%s\n' "${MODE}"
     printf '  时区：%s\n' "${TIMEZONE}"
     printf '  应用升级时间：%s\n' "${APPS_TIME}"
@@ -1163,7 +1161,7 @@ menu() {
         load_config
         clear 2>/dev/null || true
         printf '┌──────────────────────────────────────────┐\n'
-        printf '│       1Panel 自动升级管理器 v%-8s │\n' "${PROGRAM_VERSION}"
+        printf '│       1Panel 自动升级管理器             │\n'
         printf '├──────────────────────────────────────────┤\n'
         printf '│ 当前模式：%-29s│\n' "${MODE}"
         printf '│ 应用升级：%-5s %-21s│\n' "${APPS_TIME}" "${TIMEZONE}"
@@ -1243,7 +1241,7 @@ validate_unit_templates() {
 
 usage() {
     cat <<EOF
-1Panel 自动升级管理器 ${PROGRAM_VERSION}
+1Panel 自动升级管理器
 
 用法：
   1pup                  打开交互菜单

@@ -65,12 +65,6 @@ wget -qO /tmp/1pup.sh https://cdn.jsdelivr.net/gh/Aethersailor/1Panel-Auto-Upgra
 
 jsDelivr 的分支文件可能存在缓存延迟。需要立即获取仓库最新内容时，以 GitHub Raw 地址为准。
 
-当前已验证的 v0.1.1 固定提交地址：
-
-```text
-https://cdn.jsdelivr.net/gh/Aethersailor/1Panel-Auto-Upgrade@07543c3268fc78b824f0374e4268076def1c8d0e/1pup.sh
-```
-
 安装脚本首先执行只读环境检查，然后进入设置向导：
 
 ```text
@@ -177,8 +171,6 @@ sudo bash /tmp/1pup.sh repair
 ## 更新管理脚本
 
 运行 `1pup` 并选择「更新管理脚本」。脚本优先从 GitHub Raw 下载仓库 `main` 分支，失败时自动回退到 jsDelivr。完成 Bash 语法检查和嵌入 Python 自检后才替换当前文件，并保留现有配置。
-
-本项目不发布 GitHub Release；仓库 `main` 分支是公开更新来源。
 
 ## 高级命令
 
