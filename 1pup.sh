@@ -3,8 +3,8 @@
 set -euo pipefail
 
 REPOSITORY="Aethersailor/1Panel-Auto-Upgrade"
-RAW_URL="${ONEPUP_RAW_URL:-https://raw.githubusercontent.com/${REPOSITORY}/main/1pup.sh}"
-JSDELIVR_URL="${ONEPUP_JSDELIVR_URL:-https://cdn.jsdelivr.net/gh/${REPOSITORY}@main/1pup.sh}"
+RAW_URL="${ONEPUP_RAW_URL:-https://raw.githubusercontent.com/${REPOSITORY}/master/1pup.sh}"
+JSDELIVR_URL="${ONEPUP_JSDELIVR_URL:-https://cdn.jsdelivr.net/gh/${REPOSITORY}@master/1pup.sh}"
 
 MANAGER_PATH="/usr/local/bin/1pup"
 LONG_ALIAS="/usr/local/bin/1panel-auto-upgrade"
@@ -1252,7 +1252,7 @@ usage() {
   1pup run [目标]       立即执行升级
   1pup logs [目标]      查看日志
   1pup repair           修复工具自身
-  1pup update           从仓库 main 分支更新管理脚本
+  1pup update           从仓库 master 分支更新管理脚本
   1pup uninstall        卸载
 EOF
 }

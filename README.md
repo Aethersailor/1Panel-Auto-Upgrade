@@ -34,14 +34,14 @@
 使用 `curl`：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Aethersailor/1Panel-Auto-Upgrade/main/1pup.sh -o /tmp/1pup.sh \
+curl -fsSL https://raw.githubusercontent.com/Aethersailor/1Panel-Auto-Upgrade/master/1pup.sh -o /tmp/1pup.sh \
   && sudo bash /tmp/1pup.sh
 ```
 
 使用 `wget`：
 
 ```bash
-wget -qO /tmp/1pup.sh https://raw.githubusercontent.com/Aethersailor/1Panel-Auto-Upgrade/main/1pup.sh \
+wget -qO /tmp/1pup.sh https://raw.githubusercontent.com/Aethersailor/1Panel-Auto-Upgrade/master/1pup.sh \
   && sudo bash /tmp/1pup.sh
 ```
 
@@ -52,14 +52,14 @@ wget -qO /tmp/1pup.sh https://raw.githubusercontent.com/Aethersailor/1Panel-Auto
 使用 `curl`：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/Aethersailor/1Panel-Auto-Upgrade@main/1pup.sh -o /tmp/1pup.sh \
+curl -fsSL https://cdn.jsdelivr.net/gh/Aethersailor/1Panel-Auto-Upgrade@master/1pup.sh -o /tmp/1pup.sh \
   && sudo bash /tmp/1pup.sh
 ```
 
 使用 `wget`：
 
 ```bash
-wget -qO /tmp/1pup.sh https://cdn.jsdelivr.net/gh/Aethersailor/1Panel-Auto-Upgrade@main/1pup.sh \
+wget -qO /tmp/1pup.sh https://cdn.jsdelivr.net/gh/Aethersailor/1Panel-Auto-Upgrade@master/1pup.sh \
   && sudo bash /tmp/1pup.sh
 ```
 
@@ -170,7 +170,7 @@ sudo bash /tmp/1pup.sh repair
 
 ## 更新管理脚本
 
-运行 `1pup` 并选择「更新管理脚本」。脚本优先从 GitHub Raw 下载仓库 `main` 分支，失败时自动回退到 jsDelivr。完成 Bash 语法检查和嵌入 Python 自检后才替换当前文件，并保留现有配置。
+运行 `1pup` 并选择「更新管理脚本」。脚本优先从 GitHub Raw 下载仓库 `master` 分支，失败时自动回退到 jsDelivr。完成 Bash 语法检查和嵌入 Python 自检后才替换当前文件，并保留现有配置。
 
 ## 高级命令
 
