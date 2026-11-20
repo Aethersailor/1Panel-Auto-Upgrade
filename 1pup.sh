@@ -379,6 +379,7 @@ GLOBAL_LOCK = "/run/lock/1panel-auto-upgrade-global.lock"
 APP_LOCK = "/run/lock/1panel-app-auto-upgrade.lock"
 PANEL_LOCK = "/run/lock/1panel-system-auto-upgrade.lock"
 APP_SERVICE = "1panel-app-auto-upgrade.service"
+PANEL_SERVICES = ("1panel-core.service", "1panel-agent.service")
 MIN_FREE_BYTES = 500 << 20
 VERIFY_TIMEOUT = int(os.environ.get("ONEPUP_VERIFY_TIMEOUT", "3600"))
 ROLLBACK_VERIFY_TIMEOUT = int(os.environ.get("ONEPUP_ROLLBACK_TIMEOUT", "600"))
@@ -547,7 +548,23 @@ def service_active(name: str) -> bool:
 
 
 def panel_services_active() -> bool:
-    return service_active("1panel-core.service") and service_active("1panel-agent.service")
+    return all(service_active(unit) for unit in PANEL_SERVICES)
+
+
+def panel_service_invocations() -> tuple[str, ...]:
+    return tuple(
+        subprocess.check_output(
+            ["systemctl", "show", "--property=InvocationID", "--value", unit], text=True
+        ).strip()
+        for unit in PANEL_SERVICES
+    )
+
+
+def panel_services_restarted(previous_invocations: tuple[str, ...]) -> bool:
+    return panel_services_active() and all(
+        current and current != previous
+        for current, previous in zip(panel_service_invocations(), previous_invocations)
+    )
 
 
 def task_by_id(task_id: str) -> dict[str, Any] | None:
@@ -634,6 +651,7 @@ def upgrade_app(candidate: dict[str, Any]) -> bool:
         return True
     selected = versions[0]
     backup, delete_image = app_defaults()
+    backup = backup or bool(selected.get("feishuLegacy"))
     task_id = str(uuid.uuid4())
     log(
         f"升级 {label}: {candidate.get('version', '')} -> {selected.get('version', '')}; "
@@ -717,7 +735,9 @@ def cli_version() -> str:
     return "" if match is None else match.group(1)
 
 
-def wait_panel_upgrade(api: PanelAPI, old_version: str, target: str) -> bool:
+def wait_panel_upgrade(
+    api: PanelAPI, old_version: str, target: str, previous_invocations: tuple[str, ...]
+) -> bool:
     deadline = time.monotonic() + VERIFY_TIMEOUT
     while time.monotonic() < deadline:
         with contextlib.suppress(Exception):
@@ -727,7 +747,8 @@ def wait_panel_upgrade(api: PanelAPI, old_version: str, target: str) -> bool:
                 core_version == target
                 and agent_version == target
                 and status == "Free"
-                and panel_services_active()
+                # 1Panel writes both DB versions before restarting either service.
+                and panel_services_restarted(previous_invocations)
                 and cli_version() == target
             ):
                 api.request("GET", "/api/v2/core/settings/upgrade")
@@ -739,16 +760,18 @@ def wait_panel_upgrade(api: PanelAPI, old_version: str, target: str) -> bool:
 
 
 def restore_panel(old_version: str) -> bool:
-    log(f"开始调用 1pctl restore 恢复 {old_version}")
+    previous_invocations = panel_service_invocations()
+    log(f"开始调用 1Panel 恢复命令还原 {old_version}")
     result = subprocess.run(
-        ["/usr/local/bin/1pctl", "restore"],
+        # The 1pctl wrapper prompts interactively and does not propagate errors.
+        ["/usr/local/bin/1panel-core", "restore"],
         check=False,
         capture_output=True,
         text=True,
         timeout=600,
     )
     if result.returncode != 0:
-        log(f"1pctl restore 失败: {result.stderr.strip()}")
+        log(f"1Panel 恢复命令失败: {result.stderr.strip()}")
         return False
     deadline = time.monotonic() + ROLLBACK_VERIFY_TIMEOUT
     while time.monotonic() < deadline:
@@ -759,7 +782,7 @@ def restore_panel(old_version: str) -> bool:
                 core_version == old_version
                 and agent_version == old_version
                 and status == "Free"
-                and panel_services_active()
+                and panel_services_restarted(previous_invocations)
                 and cli_version() == old_version
             ):
                 log(f"面板恢复成功: {old_version}")
@@ -786,9 +809,10 @@ def run_panel() -> int:
     available = stat.f_bavail * stat.f_frsize
     if available < MIN_FREE_BYTES:
         raise RuntimeError(f"可用空间仅 {available >> 20} MB，少于 500 MB")
+    previous_invocations = panel_service_invocations()
     log(f"开始官方面板升级: {current} -> {target}")
     api.request("POST", "/api/v2/core/settings/upgrade", {"version": target})
-    if wait_panel_upgrade(api, current, target):
+    if wait_panel_upgrade(api, current, target, previous_invocations):
         log(f"面板升级成功: {target}")
         return 0
     final_version, final_status = read_core_state()
