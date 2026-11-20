@@ -186,7 +186,6 @@ render_app_service() {
 Description=Automatically upgrade 1Panel App Store applications
 Wants=network-online.target
 After=network-online.target 1panel-agent.service
-ConditionPathIsSocket=/etc/1panel/agent.sock
 
 [Service]
 Type=oneshot
@@ -527,13 +526,16 @@ class PanelAPI:
             connection.close()
 
 
-def lock_file(path: str) -> Any:
+def lock_file(path: str, *, wait: bool = False) -> Any:
     item = open(path, "w", encoding="utf-8")
     try:
         fcntl.flock(item.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
-        item.close()
-        return None
+        if not wait:
+            item.close()
+            return None
+        log("等待其他 1Panel 升级任务完成")
+        fcntl.flock(item.fileno(), fcntl.LOCK_EX)
     return item
 
 
@@ -824,8 +826,8 @@ def run_panel() -> int:
     )
 
 
-def run_with_locks(module: str) -> int:
-    global_lock = lock_file(GLOBAL_LOCK)
+def run_with_locks(module: str, *, wait_for_global_lock: bool = False) -> int:
+    global_lock = lock_file(GLOBAL_LOCK, wait=wait_for_global_lock)
     if global_lock is None:
         log("已有其他 1Panel 自动升级任务运行，本次跳过")
         return 0
@@ -883,9 +885,9 @@ def main() -> int:
         if target in ("panel", "all"):
             check_panel()
         return 0
-    if action == "run":
+    if action in ("run", "scheduled-run"):
         if target == "apps":
-            return run_with_locks("apps")
+            return run_with_locks("apps", wait_for_global_lock=action == "scheduled-run")
         if target == "panel":
             return run_with_locks("panel")
         if target == "all":
@@ -1302,7 +1304,7 @@ main() {
         repair) repair_flow ;;
         update) update_flow ;;
         uninstall) uninstall_flow "$@" ;;
-        _run) require_root _run "$@"; python_action run "${1:-}" ;;
+        _run) require_root _run "$@"; python_action scheduled-run "${1:-}" ;;
         --check) require_root --check; check_dependencies; check_target all ;;
         --self-check) self_check ;;
         --validate-units) validate_unit_templates ;;
